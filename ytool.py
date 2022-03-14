@@ -1,10 +1,16 @@
 #!/usr/bin/env python
 from youtubesearchpython import VideosSearch
-from tabulate import tabulate
 import sys
 import subprocess
 from yt_dlp import YoutubeDL
 import argparse
+
+class colors:
+    BLUE = '\033[94m'
+    MAGENTA = '\033[95m'
+    CYAN = '\033[96m'
+    GREEN = '\033[92m'
+    ENDC = '\033[0m'
 
 
 def PlayinMPV(
@@ -68,7 +74,7 @@ class YtSearch:
     def selectVid(self) -> str:
         try:
             totalres = []
-            tablelist = []
+            ind=0
             for eachres in self.videosSearch.result().get("result"):
                 eachresdictobj = {
                     "title": str(eachres.get("title")),
@@ -78,16 +84,10 @@ class YtSearch:
                     "urllink": f"https://www.youtube.com/watch?v={str(eachres.get('id'))}",
                 }
                 totalres.append(eachresdictobj)
-                tablelist.append(
-                    [
-                        eachresdictobj.get("title"),
-                        eachresdictobj.get("duration"),
-                        eachresdictobj.get("views"),
-                        eachresdictobj.get("channel"),
-                    ]
-                )
+                print(f'{colors.BLUE}{ind} {colors.CYAN}{eachresdictobj.get("title")} {colors.BLUE}{eachresdictobj.get("duration")} {colors.MAGENTA}{eachresdictobj.get("views")} {colors.GREEN}{eachresdictobj.get("channel")}{colors.ENDC}')
+                ind+=1
+            
 
-            print(tabulate(tablelist, showindex="always"))
             vidchoice = input(
                 "Enter choice (type 'n'/'next' to fetch next page and 'q'/'quit' to quit):\n"
             )
