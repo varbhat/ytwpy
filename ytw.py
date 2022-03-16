@@ -5,12 +5,13 @@ import subprocess
 from yt_dlp import YoutubeDL
 import argparse
 
+
 class colors:
-    BLUE = '\033[94m'
-    MAGENTA = '\033[95m'
-    CYAN = '\033[96m'
-    GREEN = '\033[92m'
-    ENDC = '\033[0m'
+    BLUE = "\033[94m"
+    MAGENTA = "\033[95m"
+    CYAN = "\033[96m"
+    GREEN = "\033[92m"
+    ENDC = "\033[0m"
 
 
 def PlayinMPV(
@@ -67,14 +68,15 @@ def YtdlFormat(urlstring) -> str:
 
 
 class YtSearch:
-    def __init__(self, vidsearchquery) -> None:
+    def __init__(self, vidsearchquery, result=None) -> None:
         self.vidsearchquery = vidsearchquery
         self.videosSearch = VideosSearch(vidsearchquery)
+        self.result = result
 
     def selectVid(self) -> str:
         try:
             totalres = []
-            ind=0
+            ind = 0
             for eachres in self.videosSearch.result().get("result"):
                 eachresdictobj = {
                     "title": str(eachres.get("title")),
@@ -84,9 +86,17 @@ class YtSearch:
                     "urllink": f"https://www.youtube.com/watch?v={str(eachres.get('id'))}",
                 }
                 totalres.append(eachresdictobj)
-                print(f'{colors.BLUE}{ind} {colors.CYAN}{eachresdictobj.get("title")} {colors.BLUE}{eachresdictobj.get("duration")} {colors.MAGENTA}{eachresdictobj.get("views")} {colors.GREEN}{eachresdictobj.get("channel")}{colors.ENDC}')
-                ind+=1
-            
+                print(
+                    f'{colors.BLUE}{ind} {colors.CYAN}{eachresdictobj.get("title")} {colors.BLUE}{eachresdictobj.get("duration")} {colors.MAGENTA}{eachresdictobj.get("views")} {colors.GREEN}{eachresdictobj.get("channel")}{colors.ENDC}'
+                )
+                ind += 1
+
+            if (
+                isinstance(self.result, int)
+                and self.result >= 0
+                and self.result < len(totalres)
+            ):
+                return totalres[self.result].get("urllink")
 
             vidchoice = input(
                 "Enter choice (type 'n'/'next' to fetch next page and 'q'/'quit' to quit):\n"
@@ -104,15 +114,15 @@ class YtSearch:
             sys.exit(1)
 
     @staticmethod
-    def search(query: str) -> str:
-        return YtSearch(query).selectVid()
+    def search(query: str, result=None) -> str:
+        return YtSearch(query, result).selectVid()
 
 
 if __name__ == "__main__":
     try:
         # argparse
         parser = argparse.ArgumentParser(
-            prog="ytool",
+            prog="ytw",
             description="Search,Play and Download from Youtube/yt-dlp supported sites",
         )
         parser.add_argument(
@@ -133,18 +143,17 @@ if __name__ == "__main__":
 
         parser.add_argument("-l", "--loop", help="Loop Playing", action="store_true")
         parser.add_argument("-t", "--looptimes", help="Loop x times", type=int)
+        parser.add_argument("-r", "--result", help="Pick x-th result", type=int)
         parser.add_argument(
             "-b",
             "--best",
-            help="Best Format (BestVideo+BestAudio)",
+            help="Best Format",
             action="store_true",
         )
         parser.add_argument(
             "-w", "--watch", nargs="?", help="Watch Quality (360,480,720,1080)"
         )
-        parser.add_argument(
-            "-a", "--audio", help="Play Audio (ID:251)", action="store_true"
-        )
+        parser.add_argument("-a", "--audio", help="Play Audio", action="store_true")
         parser.add_argument(
             "-c", "--cplayer", help="Use cplayer mode of mpv", action="store_true"
         )
@@ -161,10 +170,10 @@ if __name__ == "__main__":
         if args.url != None:
             yurl = args.url
         elif args.query != None:
-            yurl = YtSearch.search(args.query)
+            yurl = YtSearch.search(args.query, args.result)
         else:
             vidsearchquery = input("Enter Search Query: ")
-            yurl = YtSearch.search(vidsearchquery)
+            yurl = YtSearch.search(vidsearchquery, args.result)
 
         # mpv path/args
         mpv = "mpv"
