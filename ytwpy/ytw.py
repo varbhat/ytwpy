@@ -117,8 +117,7 @@ class YtSearch:
     def search(query: str, result=None) -> str:
         return YtSearch(query, result).selectVid()
 
-
-if __name__ == "__main__":
+def mainfunction():
     try:
         # argparse
         parser = argparse.ArgumentParser(
@@ -215,3 +214,6 @@ if __name__ == "__main__":
     except Exception as e:
         print("Error: ", e)
         sys.exit(0)
+
+if __name__ == "__main__":
+    mainfunction()

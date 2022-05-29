@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "ytwpy"
+version = "0.1.0"
+description = "Search,Play and Download Media from Youtube (and other sites supported by yt-dlp)"
+authors = ["Var Bhat <mailvarbhat@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+yt-dlp = "^2022.5.18"
+youtube-search-python = "^1.6.5"
+
+[tool.poetry.scripts]
+ytw = 'ytwpy.ytw:mainfunction'
+ytwpy = 'ytwpy.ytw:mainfunction'
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
