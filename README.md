@@ -3,18 +3,17 @@
 <hr>
 
 ## Installation
-* Install Requirements of `ytwpy` first:
-    * [`yt-dlp`](https://github.com/yt-dlp/yt-dlp)
-    * [`youtube-search-python`](https://github.com/alexmercerind/youtube-search-python)
-    * [`mpv`](https://mpv.io/)
-    * [`ffmpeg`](https://ffmpeg.org/)
-* You can then run the Python script found in this Repository.
-
+* Make sure you have [`mpv`](https://mpv.io/) installed as Audio/Video is Played with [`mpv`](https://mpv.io/).
+* Use [`pip`](https://pypi.org/project/pip) to install `ytwpy`:
+   ```bash
+   pip install -U git+https://github.com/varbhat/ytwpy
+   ```
+* After installation, `ytw` and `ytwpy` commands will be available.
 
 ## Usage
 
 ```bash
-usage: ytw.py [-h] [-f [FORMAT]] [-m [MPV]] [-q [QUERY]] [-u [URL]] [-d] [-l]
+usage: ytwpy [-h] [-f [FORMAT]] [-m [MPV]] [-q [QUERY]] [-u [URL]] [-d] [-l]
            [-t LOOPTIMES] [-r RESULT] [-b] [-w [WATCH]] [-a] [-c] [-s]
 
 Search,Play and Download from Youtube/yt-dlp supported sites
