@@ -8,6 +8,7 @@ authors = ["Var Bhat <mailvarbhat@gmail.com>"]
 python = "^3.10"
 yt-dlp = "^2022.5.18"
 youtube-search-python = "^1.6.5"
+pyfzf = "^0.3.1"
 
 [tool.poetry.scripts]
 ytw = 'ytwpy.ytw:mainfunction'

@@ -1,21 +1,20 @@
 #!/usr/bin/env python
 from youtubesearchpython import VideosSearch
+from youtubesearchpython import PlaylistsSearch
+from youtubesearchpython import ChannelsSearch
+from youtubesearchpython import Playlist
 import sys
 import subprocess
 from yt_dlp import YoutubeDL
 import argparse
+from pyfzf.pyfzf import FzfPrompt
+from typing import List
 
 
-class colors:
-    BLUE = "\033[94m"
-    MAGENTA = "\033[95m"
-    CYAN = "\033[96m"
-    GREEN = "\033[92m"
-    ENDC = "\033[0m"
-
+fzf = FzfPrompt()
 
 def PlayinMPV(
-    urlstring,
+    urlstrings,
     formatstring,
     mpv="mpv",
     cplayerMode=False,
@@ -24,7 +23,7 @@ def PlayinMPV(
     startNewSession=True,
 ):
     try:
-        opencmd = [mpv, f"--ytdl-format={formatstring}", urlstring]
+        opencmd = [mpv, f"--ytdl-format={formatstring}"] + urlstrings
         if cplayerMode == False:
             opencmd.append("--player-operation-mode=pseudo-gui")
         else:
@@ -45,22 +44,22 @@ def PlayinMPV(
         sys.exit(1)
 
 
-def YtdlDownload(urlstring, formatstring):
+def YtdlDownload(urlstrings, formatstring):
     try:
         ydl_opts = {"format": formatstring}
         with YoutubeDL(ydl_opts) as ydl:
-            ydl.download([urlstring])
+            ydl.download(urlstrings)
     except Exception as e:
         print("Error Downloading Media: ", e)
         sys.exit(1)
 
 
-def YtdlFormat(urlstring) -> str:
+def YtdlFormat(urlstrings) -> str:
     try:
         ydl_opts = {"listformats": True}
         with YoutubeDL(ydl_opts) as ydl:
-            ydl.download([urlstring])
-        formatchoice = input("Enter Format: ")
+            ydl.download(urlstrings[0])
+        formatchoice = input("Enter Format> ")
         return formatchoice
     except Exception as e:
         print("Error Listing Formats of Media: ", e)
@@ -70,52 +69,56 @@ def YtdlFormat(urlstring) -> str:
 class YtSearch:
     def __init__(self, vidsearchquery, result=None) -> None:
         self.vidsearchquery = vidsearchquery
-        self.videosSearch = VideosSearch(vidsearchquery)
         self.result = result
+        self.videosSearch = VideosSearch(self.vidsearchquery)
 
-    def selectVid(self) -> str:
+    def selectVid(self):
         try:
             totalres = []
+            resultdict = {}
+            totalres.append("quit")
+            totalres.append("next")
+            totalres.append("search again")
             ind = 0
             for eachres in self.videosSearch.result().get("result"):
-                eachresdictobj = {
-                    "title": str(eachres.get("title")),
-                    "duration": str(eachres.get("duration")),
-                    "views": str(eachres.get("viewCount").get("short")),
-                    "channel": str(eachres.get("channel").get("name")),
-                    "urllink": f"https://www.youtube.com/watch?v={str(eachres.get('id'))}",
-                }
-                totalres.append(eachresdictobj)
-                print(
-                    f'{colors.BLUE}{ind} {colors.CYAN}{eachresdictobj.get("title")} {colors.BLUE}{eachresdictobj.get("duration")} {colors.MAGENTA}{eachresdictobj.get("views")} {colors.GREEN}{eachresdictobj.get("channel")}{colors.ENDC}'
-                )
-                ind += 1
+                currentres = f'{str(eachres.get("title"))}  {str(eachres.get("duration"))} {str(eachres.get("viewCount").get("short"))} {str(eachres.get("channel").get("name"))}'
+                resultdict[currentres] = {"url":f"https://www.youtube.com/watch?v={str(eachres.get('id'))}","ind":ind}
+                totalres.append(currentres)
+                ind+=1
 
             if (
                 isinstance(self.result, int)
                 and self.result >= 0
                 and self.result < len(totalres)
             ):
-                return totalres[self.result].get("urllink")
+                for _, value in resultdict.items():
+                    if value.get("ind") == self.result:
+                        return [value.get("url")]
 
-            vidchoice = input(
-                "Enter choice (type 'n'/'next' to fetch next page and 'q'/'quit' to quit):\n"
-            )
-            if vidchoice == "next" or vidchoice == "n":
-                print("Fetching Next Page")
-                self.videosSearch.next()
-                return self.selectVid()
-            elif vidchoice == "quit" or vidchoice == "q":
-                sys.exit(0)
+            vidchoice=fzf.prompt(totalres, '--multi')
+            if vidchoice:
+                if "next" in vidchoice:
+                    print("Fetching Next Page")
+                    self.videosSearch.next()
+                    return self.selectVid()
+                elif "quit" in vidchoice:
+                    sys.exit(0)
+                elif "search again" in vidchoice:
+                    vidsearchquery = input("Enter Search Query> ")
+                    return YtSearch(vidsearchquery,self.result).selectVid()
+                else:
+                    return [ val.get("url") for key,val in resultdict.items() if key in vidchoice]
             else:
-                return totalres[int(vidchoice)].get("urllink")
+                sys.exit(0)
         except Exception as e:
             print("Error Searching YouTube: ", e)
             sys.exit(1)
 
     @staticmethod
-    def search(query: str, result=None) -> str:
+    def search(query: str, result=None) -> List[str]:
         return YtSearch(query, result).selectVid()
+
+    
 
 def mainfunction():
     try:
@@ -171,7 +174,7 @@ def mainfunction():
         elif args.query != None:
             yurl = YtSearch.search(args.query, args.result)
         else:
-            vidsearchquery = input("Enter Search Query: ")
+            vidsearchquery = input("Enter Search Query> ")
             yurl = YtSearch.search(vidsearchquery, args.result)
 
         # mpv path/args
