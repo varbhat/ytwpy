@@ -444,6 +444,9 @@ def mainfunction():
         parser.add_argument(
              "--all", help="Search for Videos,Playlists and Channels", action="store_true"
         )
+        parser.add_argument(
+             "--ask", help="Ask for Search Type", action="store_true"
+        )
 
         parser.add_argument("-l", "--loop", help="Loop Playing", action="store_true")
         parser.add_argument("-t", "--looptimes", help="Loop x times", type=int)
@@ -471,30 +474,46 @@ def mainfunction():
 
         # get url of media
         yurl = ""
+        sinputstr = ""
+        
+        ysearchfn = YtSearch.search
+
+        if args.all == True:
+            ysearchfn = YtSearch.searchAll
+            sinputstr = "Search YouTube> "
+        elif args.playlist == True:
+            ysearchfn = YtSearch.searchpl
+            sinputstr = "Search YouTube Playlists> "
+        elif args.channel == True:
+            ysearchfn = YtSearch.searchchan
+            sinputstr = "Search YouTube Channels> "
+        elif args.ask == True:
+            selchoices = ["Search YouTube","Search YouTube Videos","Search YouTube Playlists","Search YouTube Channels"]
+            selchoice = fzf.prompt(selchoices)[0]
+            if selchoice == selchoices[0]:
+                ysearchfn = YtSearch.searchAll
+                sinputstr = "Search YouTube> "
+            elif selchoice == selchoices[1]:
+                ysearchfn = YtSearch.search
+                sinputstr = "Search YouTube Videos> "
+            elif selchoice == selchoices[2]:
+                ysearchfn = YtSearch.searchpl
+                sinputstr = "Search YouTube Playlists> "
+            elif selchoice == selchoices[3]:
+                ysearchfn = YtSearch.searchchan
+                sinputstr = "Search YouTube Channels> "                
+        else:
+            ysearchfn = YtSearch.search
+            sinputstr = "Search YouTube Videos> "
+
+        yquery = args.query
+        if yquery == None:
+            yquery = input(sinputstr)
+            
         if args.url != None:
             yurl = args.url
-        elif args.query != None:
-            if args.all == True:
-                yurl = YtSearch.searchAll(args.query,args.result)
-            elif args.playlist == True:
-                yurl = YtSearch.searchpl(args.query,args.result)
-            elif args.channel == True:
-                yurl = YtSearch.searchchan(args.query,args.result)
-            else:
-                yurl = YtSearch.search(args.query, args.result)
         else:
-            if args.all == True:
-               vidsearchquery = input("Search YouTube> ")
-               yurl = YtSearch.searchAll(vidsearchquery,args.result) 
-            elif args.playlist == True:
-                vidsearchquery = input("Search YouTube Playlists> ")
-                yurl = YtSearch.searchpl(vidsearchquery,args.result) 
-            elif args.channel == True:
-                vidsearchquery = input("Search YouTube Channels> ")
-                yurl = YtSearch.searchchan(vidsearchquery,args.result)
-            else:
-                vidsearchquery = input("Search YouTube Videos> ")
-                yurl = YtSearch.search(vidsearchquery, args.result)
+            yurl = ysearchfn(yquery,args.result)
 
         # mpv path/args
         mpv = "mpv"
