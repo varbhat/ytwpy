@@ -45,7 +45,8 @@ def PlayinMPV(
 
 def WriteToFile(urlstrings,filename):
     with open(filename, 'w') as outfile:
-        outfile.write("\n".join(urlstrings))
+        for item in urlstrings:
+            outfile.write(f"{item}\n")
 
 def YtdlDownload(urlstrings, formatstring):
     try:
