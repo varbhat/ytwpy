@@ -16,6 +16,7 @@ from typing import List
 
 fzf = FzfPrompt()
 
+
 def PlayinMPV(
     urlstrings,
     formatstring,
@@ -46,10 +47,12 @@ def PlayinMPV(
         print("Error Playing Media in mpv: ", e)
         sys.exit(1)
 
-def WriteToFile(urlstrings,filename):
-    with open(filename, 'w') as outfile:
+
+def WriteToFile(urlstrings, filename):
+    with open(filename, "w") as outfile:
         for item in urlstrings:
             outfile.write(f"{item}\n")
+
 
 def YtdlDownload(urlstrings, formatstring):
     try:
@@ -60,9 +63,12 @@ def YtdlDownload(urlstrings, formatstring):
         print("Error Downloading Media: ", e)
         sys.exit(1)
 
+
 def YtdlFormat(urlstrings) -> str:
     try:
-        formatchoice = input("Enter Format(type \"fetch\" to let yt-dlp fetch formats for you)> ")
+        formatchoice = input(
+            'Enter Format(type "fetch" to let yt-dlp fetch formats for you)> '
+        )
         if formatchoice == "fetch":
             ydl_opts = {"listformats": True}
             with YoutubeDL(ydl_opts) as ydl:
@@ -70,7 +76,7 @@ def YtdlFormat(urlstrings) -> str:
             fc = input("Enter Format> ")
             return fc
         else:
-            if formatchoice.startswith((' ', '\t')):
+            if formatchoice.startswith((" ", "\t")):
                 return formatchoice.strip()
             elif formatchoice == "a" or formatchoice == "audio":
                 return "bestaudio"
@@ -82,7 +88,7 @@ def YtdlFormat(urlstrings) -> str:
 
 
 class YtSearch:
-    def __init__(self, vidsearchquery, result=None,searchtype="video") -> None:
+    def __init__(self, vidsearchquery, result=None, searchtype="video") -> None:
         self.vidsearchquery = vidsearchquery
         self.result = result
         self.listofpls = []
@@ -96,7 +102,7 @@ class YtSearch:
         elif searchtype == "all":
             self.allSearch = Search(self.vidsearchquery)
 
-    def listVids(self,listofvids):
+    def listVids(self, listofvids):
         try:
             totalres = []
             resultdict = {}
@@ -107,16 +113,16 @@ class YtSearch:
                     resultdict[currentres] = str(eachres.get("link"))
                     totalres.append(currentres)
 
-            vidchoice=fzf.prompt(totalres, '--multi')
+            vidchoice = fzf.prompt(totalres, "--multi")
             if vidchoice:
                 if "quit" in vidchoice:
                     sys.exit(0)
                 else:
-                    return [ val for key,val in resultdict.items() if key in vidchoice]
+                    return [val for key, val in resultdict.items() if key in vidchoice]
             else:
                 sys.exit(0)
         except Exception as e:
-            print("Error listing Videos",e)
+            print("Error listing Videos", e)
             sys.exit(1)
 
     def listVidfromPLs(self):
@@ -130,19 +136,19 @@ class YtSearch:
                     resultdict[currentres] = str(eachres.get("link"))
                     totalres.append(currentres)
 
-            vidchoice=fzf.prompt(totalres, '--multi')
+            vidchoice = fzf.prompt(totalres, "--multi")
             if vidchoice:
                 if "next" in vidchoice:
                     for curPlaylist in self.listofpls:
                         if curPlaylist.hasMoreVideos:
-                             curPlaylist.getNextVideos()
+                            curPlaylist.getNextVideos()
                     return self.listVidfromPLs()
                 else:
-                    return [ val for key,val in resultdict.items() if key in vidchoice]
+                    return [val for key, val in resultdict.items() if key in vidchoice]
             else:
                 sys.exit(0)
         except Exception as e:
-            print("Error listing Videos",e)
+            print("Error listing Videos", e)
             sys.exit(1)
 
     def listChanPLs(self):
@@ -154,24 +160,32 @@ class YtSearch:
                 pls = eachpl.result["playlists"]
                 for eachres in pls:
                     currentres = f'{str(eachres.get("title"))}  {str(eachres.get("videoCount"))}  {str(eachres.get("lastEdited"))}'
-                    resultdict[currentres] = "https://www.youtube.com/playlist?list=" +str(eachres.get("id"))
+                    resultdict[
+                        currentres
+                    ] = "https://www.youtube.com/playlist?list=" + str(
+                        eachres.get("id")
+                    )
                     totalres.append(currentres)
 
-            vidchoice=fzf.prompt(totalres, '--multi')
+            vidchoice = fzf.prompt(totalres, "--multi")
             if vidchoice:
                 if "next" in vidchoice:
                     for curChan in self.listofchanpls:
                         if curChan.has_more_playlists():
-                             curChan.next()
+                            curChan.next()
                     return self.listChanPLs()
                 else:
-                    self.listofpls = [ Playlist(val) for key,val in resultdict.items() if key in vidchoice]
+                    self.listofpls = [
+                        Playlist(val)
+                        for key, val in resultdict.items()
+                        if key in vidchoice
+                    ]
                     return self.listVidfromPLs()
             else:
                 sys.exit(0)
         except Exception as e:
-            print("Error listing Videos",e)
-            sys.exit(1)  
+            print("Error listing Videos", e)
+            sys.exit(1)
 
     def selectVid(self):
         try:
@@ -182,9 +196,9 @@ class YtSearch:
             ind = 0
             for eachres in self.videosSearch.result().get("result"):
                 currentres = f'{str(eachres.get("title"))}  {str(eachres.get("duration"))} {str(eachres.get("viewCount").get("short"))} {str(eachres.get("channel").get("name"))}'
-                resultdict[currentres] = {"url":str(eachres.get("link")),"ind":ind}
+                resultdict[currentres] = {"url": str(eachres.get("link")), "ind": ind}
                 totalres.append(currentres)
-                ind+=1
+                ind += 1
 
             if (
                 isinstance(self.result, int)
@@ -195,7 +209,7 @@ class YtSearch:
                     if value.get("ind") == self.result:
                         return [value.get("url")]
 
-            vidchoice=fzf.prompt(totalres, '--multi')
+            vidchoice = fzf.prompt(totalres, "--multi")
             if vidchoice:
                 if "next" in vidchoice:
                     print("Fetching Next Page")
@@ -203,9 +217,13 @@ class YtSearch:
                     return self.selectVid()
                 elif "search again" in vidchoice:
                     vidsearchquery = input("Enter Search Query> ")
-                    return YtSearch(vidsearchquery,self.result).selectVid()
+                    return YtSearch(vidsearchquery, self.result).selectVid()
                 else:
-                    return [ val.get("url") for key,val in resultdict.items() if key in vidchoice]
+                    return [
+                        val.get("url")
+                        for key, val in resultdict.items()
+                        if key in vidchoice
+                    ]
             else:
                 sys.exit(0)
         except Exception as e:
@@ -228,9 +246,14 @@ class YtSearch:
                     currentres = f'(v) {str(eachres.get("title"))} {str(eachres.get("duration"))} {str(eachres.get("viewCount").get("short"))} {str(eachres.get("channel").get("name"))}'
                 elif curtype == "playlist":
                     currentres = f'(p) {str(eachres.get("title"))}  {str(eachres.get("videoCount"))} {str(eachres.get("channel").get("name"))}'
-                resultdict[currentres] = {"url":str(eachres.get("link")),"id":str(eachres.get("id")),"ind":ind,"type":curtype}
+                resultdict[currentres] = {
+                    "url": str(eachres.get("link")),
+                    "id": str(eachres.get("id")),
+                    "ind": ind,
+                    "type": curtype,
+                }
                 totalres.append(currentres)
-                ind+=1
+                ind += 1
 
             if (
                 isinstance(self.result, int)
@@ -241,7 +264,7 @@ class YtSearch:
                     if value.get("ind") == self.result:
                         return [value.get("url")]
 
-            vidchoice=fzf.prompt(totalres, '--multi')
+            vidchoice = fzf.prompt(totalres, "--multi")
             if vidchoice:
                 if "next" in vidchoice:
                     print("Fetching Next Page")
@@ -249,13 +272,13 @@ class YtSearch:
                     return self.selectSearchAll()
                 elif "search again" in vidchoice:
                     vidsearchquery = input("Enter Search Query> ")
-                    return YtSearch(vidsearchquery,self.result,"all").selectVid()
+                    return YtSearch(vidsearchquery, self.result, "all").selectVid()
                 else:
                     if len(vidchoice) == 1:
                         curType = resultdict[vidchoice[0]].get("type")
                         curURL = resultdict[vidchoice[0]].get("url")
                         if curType == "playlist":
-                            selchoices = ["Play the Playlist","List Videos"]
+                            selchoices = ["Play the Playlist", "List Videos"]
                             selchoice = fzf.prompt(selchoices)
                             if selchoice[0] == selchoices[0]:
                                 return [curURL]
@@ -265,7 +288,11 @@ class YtSearch:
                                 return self.listVidfromPLs()
                         elif curType == "channel":
                             curID = resultdict[vidchoice[0]].get("id")
-                            selchoices = ["Play the Channel","List Videos","List Channel Playlists"]
+                            selchoices = [
+                                "Play the Channel",
+                                "List Videos",
+                                "List Channel Playlists",
+                            ]
                             selchoice = fzf.prompt(selchoices)
                             if selchoice[0] == selchoices[0]:
                                 return [curID]
@@ -275,12 +302,18 @@ class YtSearch:
                                 return self.listChanPLs()
                             else:
                                 self.listofpls = []
-                                self.listofpls.append(Playlist(playlist_from_channel_id(curID)))
+                                self.listofpls.append(
+                                    Playlist(playlist_from_channel_id(curID))
+                                )
                                 return self.listVidfromPLs()
                         else:
                             return [curURL]
                     else:
-                        return [ val.get("url") for key,val in resultdict.items() if key in vidchoice]
+                        return [
+                            val.get("url")
+                            for key, val in resultdict.items()
+                            if key in vidchoice
+                        ]
             else:
                 sys.exit(0)
         except Exception as e:
@@ -296,9 +329,9 @@ class YtSearch:
             ind = 0
             for eachres in self.playlistsSearch.result().get("result"):
                 currentres = f'{str(eachres.get("title"))}  {str(eachres.get("videoCount"))} {str(eachres.get("channel").get("name"))}'
-                resultdict[currentres] = {"url": str(eachres.get("link")),"ind":ind}
+                resultdict[currentres] = {"url": str(eachres.get("link")), "ind": ind}
                 totalres.append(currentres)
-                ind+=1
+                ind += 1
 
             if (
                 isinstance(self.result, int)
@@ -309,7 +342,7 @@ class YtSearch:
                     if value.get("ind") == self.result:
                         return [value.get("url")]
 
-            vidchoice=fzf.prompt(totalres, '--multi')
+            vidchoice = fzf.prompt(totalres, "--multi")
             if vidchoice:
                 if "next" in vidchoice:
                     print("Fetching Next Page")
@@ -317,10 +350,14 @@ class YtSearch:
                     return self.selectPL()
                 elif "search again" in vidchoice:
                     vidsearchquery = input("Enter Search Query> ")
-                    return YtSearch(vidsearchquery,self.result,"playlist").selectPL()
+                    return YtSearch(vidsearchquery, self.result, "playlist").selectPL()
                 else:
-                    listofplaylists = [ val.get("url") for key,val in resultdict.items() if key in vidchoice]
-                    selchoices = ["Play the Playlist","List Videos"]
+                    listofplaylists = [
+                        val.get("url")
+                        for key, val in resultdict.items()
+                        if key in vidchoice
+                    ]
+                    selchoices = ["Play the Playlist", "List Videos"]
                     selchoice = fzf.prompt(selchoices)
                     if selchoice[0] == selchoices[0]:
                         return listofplaylists
@@ -344,9 +381,13 @@ class YtSearch:
             ind = 0
             for eachres in self.channelsSearch.result().get("result"):
                 currentres = f'{str(eachres.get("title"))}  {str(eachres.get("videoCount"))} | {str(eachres.get("subscribers"))}'
-                resultdict[currentres] = {"url": str(eachres.get("link")),"id":str(eachres.get("id")),"ind":ind}
+                resultdict[currentres] = {
+                    "url": str(eachres.get("link")),
+                    "id": str(eachres.get("id")),
+                    "ind": ind,
+                }
                 totalres.append(currentres)
-                ind+=1
+                ind += 1
 
             if (
                 isinstance(self.result, int)
@@ -357,7 +398,7 @@ class YtSearch:
                     if value.get("ind") == self.result:
                         return [value.get("url")]
 
-            vidchoice=fzf.prompt(totalres, '--multi')
+            vidchoice = fzf.prompt(totalres, "--multi")
             if vidchoice:
                 if "next" in vidchoice:
                     print("Fetching Next Page")
@@ -365,13 +406,25 @@ class YtSearch:
                     return self.selectChan()
                 elif "search again" in vidchoice:
                     vidsearchquery = input("Enter Search Query> ")
-                    return YtSearch(vidsearchquery,self.result,"channel").selectChan()
+                    return YtSearch(vidsearchquery, self.result, "channel").selectChan()
                 else:
-                    listofchans = [ val.get("id") for key,val in resultdict.items() if key in vidchoice]
-                    selchoices = ["Play the Channel","List Videos","List Channel Playlists"]
+                    listofchans = [
+                        val.get("id")
+                        for key, val in resultdict.items()
+                        if key in vidchoice
+                    ]
+                    selchoices = [
+                        "Play the Channel",
+                        "List Videos",
+                        "List Channel Playlists",
+                    ]
                     selchoice = fzf.prompt(selchoices)
                     if selchoice[0] == selchoices[0]:
-                        return [ val.get("url") for key,val in resultdict.items() if key in vidchoice]
+                        return [
+                            val.get("url")
+                            for key, val in resultdict.items()
+                            if key in vidchoice
+                        ]
                     if selchoice[0] == selchoices[2]:
                         self.listofchanpls = []
                         for eachchan in listofchans:
@@ -380,7 +433,9 @@ class YtSearch:
                     else:
                         self.listofpls = []
                         for eachpl in listofchans:
-                            self.listofpls.append(Playlist(playlist_from_channel_id(eachpl)))
+                            self.listofpls.append(
+                                Playlist(playlist_from_channel_id(eachpl))
+                            )
                         return self.listVidfromPLs()
             else:
                 sys.exit(0)
@@ -394,17 +449,16 @@ class YtSearch:
 
     @staticmethod
     def searchpl(query: str, result=None) -> List[str]:
-        return YtSearch(query, result,"playlist").selectPL()
+        return YtSearch(query, result, "playlist").selectPL()
 
     @staticmethod
     def searchchan(query: str, result=None) -> List[str]:
-        return YtSearch(query, result,"channel").selectChan()
+        return YtSearch(query, result, "channel").selectChan()
 
     @staticmethod
     def searchAll(query: str, result=None) -> List[str]:
-        return YtSearch(query, result,"all").selectSearchAll()
-    
-   
+        return YtSearch(query, result, "all").selectSearchAll()
+
 
 def mainfunction():
     try:
@@ -436,17 +490,17 @@ def mainfunction():
         )
 
         parser.add_argument(
-             "--playlist", help="Search for Playlists", action="store_true"
+            "--playlist", help="Search for Playlists", action="store_true"
         )
         parser.add_argument(
-             "--channel", help="Search for Channels", action="store_true"
+            "--channel", help="Search for Channels", action="store_true"
         )
         parser.add_argument(
-             "--all", help="Search for Videos,Playlists and Channels", action="store_true"
+            "--all",
+            help="Search for Videos,Playlists and Channels",
+            action="store_true",
         )
-        parser.add_argument(
-             "--ask", help="Ask for Search Type", action="store_true"
-        )
+        parser.add_argument("--ask", help="Ask for Search Type", action="store_true")
 
         parser.add_argument("-l", "--loop", help="Loop Playing", action="store_true")
         parser.add_argument("-t", "--looptimes", help="Loop x times", type=int)
@@ -475,7 +529,7 @@ def mainfunction():
         # get url of media
         yurl = ""
         sinputstr = ""
-        
+
         ysearchfn = YtSearch.search
 
         if args.all == True:
@@ -488,7 +542,12 @@ def mainfunction():
             ysearchfn = YtSearch.searchchan
             sinputstr = "Search YouTube Channels> "
         elif args.ask == True:
-            selchoices = ["Search YouTube","Search YouTube Videos","Search YouTube Playlists","Search YouTube Channels"]
+            selchoices = [
+                "Search YouTube",
+                "Search YouTube Videos",
+                "Search YouTube Playlists",
+                "Search YouTube Channels",
+            ]
             selchoice = fzf.prompt(selchoices)[0]
             if selchoice == selchoices[0]:
                 ysearchfn = YtSearch.searchAll
@@ -501,7 +560,7 @@ def mainfunction():
                 sinputstr = "Search YouTube Playlists> "
             elif selchoice == selchoices[3]:
                 ysearchfn = YtSearch.searchchan
-                sinputstr = "Search YouTube Channels> "                
+                sinputstr = "Search YouTube Channels> "
         else:
             ysearchfn = YtSearch.search
             sinputstr = "Search YouTube Videos> "
@@ -509,11 +568,11 @@ def mainfunction():
         yquery = args.query
         if yquery == None:
             yquery = input(sinputstr)
-            
+
         if args.url != None:
             yurl = args.url
         else:
-            yurl = ysearchfn(yquery,args.result)
+            yurl = ysearchfn(yquery, args.result)
 
         # mpv path/args
         mpv = "mpv"
@@ -530,7 +589,7 @@ def mainfunction():
 
         # Download or Play
         if args.write != None:
-            WriteToFile(yurl,args.write)
+            WriteToFile(yurl, args.write)
         else:
             if args.format != None:
                 frmtstr = args.format
@@ -559,6 +618,7 @@ def mainfunction():
     except Exception as e:
         print("Error: ", e)
         sys.exit(0)
+
 
 if __name__ == "__main__":
     mainfunction()
