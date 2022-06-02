@@ -43,6 +43,9 @@ def PlayinMPV(
         print("Error Playing Media in mpv: ", e)
         sys.exit(1)
 
+def WriteToFile(urlstrings,filename):
+    with open(filename, 'w') as outfile:
+        outfile.write("\n".join(urlstrings))
 
 def YtdlDownload(urlstrings, formatstring):
     try:
@@ -52,7 +55,6 @@ def YtdlDownload(urlstrings, formatstring):
     except Exception as e:
         print("Error Downloading Media: ", e)
         sys.exit(1)
-
 
 def YtdlFormat(urlstrings) -> str:
     try:
@@ -137,6 +139,12 @@ def mainfunction():
             nargs="?",
             help="Custom Path of mpv and Arguments to it",
         )
+        parser.add_argument(
+            "--write",
+            type=str,
+            nargs="?",
+            help="Write URLs to File",
+        )
         parser.add_argument("-q", "--query", nargs="?", help="Search Query")
         parser.add_argument("-u", "--url", nargs="?", help="URL")
         parser.add_argument(
@@ -201,7 +209,9 @@ def mainfunction():
             sns = False
 
         # Download or Play
-        if args.download == True:
+        if args.write != None:
+            WriteToFile(yurl,args.write)
+        elif args.download == True:
             YtdlDownload(yurl, frmtstr)
         else:
             PlayinMPV(
